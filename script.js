@@ -11,10 +11,7 @@ class GameTreeNode {
     }
 }
 
-const board = document.getElementById('board');
-const boardSize = 10;
-let currentPlayer = 'X';
-
+// Tạo bàn cờ
 function createBoard() {
     for (let i = 0; i < boardSize; i++) {
         for (let j = 0; j < boardSize; j++) {
@@ -28,27 +25,14 @@ function createBoard() {
     }
 }
 
-// Tạo nút gốc cho cây trò chơi
-const initialBoard = [
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-];
-
-const rootNode = new GameTreeNode(initialBoard, currentPlayer);
 
 // Thêm các nút con và xây dựng cây trò chơi
 // Ví dụ: Thêm tất cả các nước đi hợp lệ từ trạng thái hiện tại của bàn cờ làm nút con
 function generateChildNodes(node) {
     const board = node.board;
-    const currentPlayer = node.player === "X" ? "O" : "X"; // Chuyển lượt chơi
+
+    // Chuyển lượt chơi
+    const currentPlayer = node.player === "X" ? "O" : "X";
 
     // Lặp qua tất cả ô trong bàn cờ
     for (let row = 0; row < 10; row++) {
@@ -71,18 +55,19 @@ function generateChildNodes(node) {
 
 // Kiểm tra điều kiện chiến thắng
 function checkWin(board, player, row, col) {
+    const targetLength = 3;
+
     return (
-        checkHorizontal(board, player, row, col) ||
-        checkVertical(board, player, row, col) ||
-        checkDiagonal(board, player, row, col)
+        checkHorizontal(board, player, row, col, targetLength) ||
+        checkVertical(board, player, row, col, targetLength) ||
+        checkDiagonal(board, player, row, col, targetLength)
     );
 }
 
 // Kiểm tra hàng ngang
-function checkHorizontal(board, player, row, col) {
+function checkHorizontal(board, player, row, col, targetLength) {
 
     const numCols = board[0].length;
-    const targetLength = 5;
 
     let count = 0;
     for (let i = Math.max(0, col - targetLength + 1); i <= Math.min(numCols - 1, col + targetLength - 1); i++) {
@@ -100,10 +85,9 @@ function checkHorizontal(board, player, row, col) {
 }
 
 // Kiểm tra hàng dọc nè
-function checkVertical(board, player, row, col) {
+function checkVertical(board, player, row, col, targetLength) {
 
     const numRows = board.length;
-    const targetLength = 5;
 
     let count = 0;
     for (let i = Math.max(0, row - targetLength + 1); i <= Math.min(numRows - 1, row + targetLength - 1); i++) {
@@ -121,11 +105,11 @@ function checkVertical(board, player, row, col) {
 }
 
 // Kiểm tra đường chéo
-function checkDiagonal(board, player, row, col) {
+function checkDiagonal(board, player, row, col, targetLength) {
     const numRows = board.length;
     const numCols = board[0].length;
-    const targetLength = 5;
 
+    // Kiểm tra đường chéo chính (phải dưới) và đường chéo phụ (phải trên)
     function checkDiagonalHelper(dx, dy) {
         let count = 0;
         for (let i = -targetLength + 1; i < targetLength; i++) {
@@ -146,17 +130,17 @@ function checkDiagonal(board, player, row, col) {
     }
 
     return (
-        checkDiagonalHelper(1, 1) || // Đường chéo chính (phải dưới)
-        checkDiagonalHelper(1, -1) // Đường chéo phụ (phải trên)
+        // Đường chéo chính (phải dưới)
+        // Đường chéo phụ (phải trên)
+        checkDiagonalHelper(1, 1) ||
+        checkDiagonalHelper(1, -1)
     );
 }
 
 // Lamf mới bàn cờ
 function resetBoard() {
-    moves = [];
-    currentPlayer = "X";
     board.innerHTML = '';
-
+    currentNode.addChild(new GameTreeNode(initialBoard, firstPlayer));
 }
 
 // Tạo nước đi
@@ -165,22 +149,66 @@ function makeMove(event) {
     const row = cell.dataset.row;
     const col = cell.dataset.col;
 
+    // Kiểm tra ô còn trống không
     if (!cell.textContent) {
-        cell.textContent = currentPlayer;
-        moves.push({ row, col, player: currentPlayer });
+        // Đánh dấu ô
+        cell.textContent = currentNode.player;
 
+        // Cập nhật bàn cờ
+        let newBoard = currentNode.board.map((row) => [...row]);
+        newBoard[row][col] = currentNode.player;
 
+        // Tạo nút con cho nút hiện tại
+        currentNode.addChild(new GameTreeNode(newBoard, currentNode.player));
+        console.log(newBoard)
+
+        // Chuyển node hiện tại thành nút con vừa tạo
+        currentNode = currentNode.children[0];
+
+        // Kiểm tra điều kiện thắng
+        const winner = checkWin(currentNode.board, currentNode.player, Number(row), Number(col));
         console.log(winner)
+
+        // Trả về người chơi chiến thắng và làm mới trò chơi
         if (winner) {
-            alert(`Player ${currentPlayer} wins!`);
+            alert(`Player ${currentNode.player} wins!`);
             resetBoard();
             createBoard();
         }
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        // Chuyển lượt chơi
+        currentNode.player = currentNode.player === 'X' ? 'O' : 'X';
     }
 }
 
+// Chuẩn bị biến trò chơi
+
+// lấy bàn cờ từ web
+const board = document.getElementById('board');
+const boardSize = 10;
+// Người chơi hiện tại
+const firstPlayer = 'X';
+
+// Tạo nút gốc cho cây trò chơi
+const initialBoard = [
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+];
+
+const rootNode = new GameTreeNode(initialBoard, currentPlayer);
+let currentNode = rootNode;
+
 
 // Bắt đầu game ở đây
-generateChildNodes(rootNode);
 createBoard();
+
+// Phần này để làm ai cho trò chơi -- tương lai
+// Tạo trò chơi bằng cách thêm các nút con cho nút gốc
+// generateChildNodes(rootNode); 
