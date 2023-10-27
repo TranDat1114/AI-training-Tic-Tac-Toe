@@ -28,6 +28,7 @@ function findLastNode(node) {
 const board = document.getElementById('board');
 const boardSize = 10;
 let gameNumber = 0;
+let time = 0;
 let emptyCellsCount = boardSize * boardSize;
 // Người chơi hiện tại
 const firstPlayer = 'X';
@@ -43,7 +44,7 @@ const initialBoard = [
     ["", "", "", "", "", "", "", "", "", ""],
     ["", "", "", "", "", "", "", "", "", ""],
     ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "X", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
 ];
 
 const rootNode = new GameTreeNode(initialBoard, firstPlayer);
@@ -198,6 +199,7 @@ const restartOrSee = (winner) => {
 function resetBoard() {
     board.innerHTML = '';
     gameNumber += 1;
+    time = 0;
     rootNode.addChild(new GameTreeNode(initialBoard, firstPlayer));
 }
 
@@ -211,11 +213,18 @@ function makeMove(event) {
     const row = cell.dataset.row;
     const col = cell.dataset.col;
 
+    if (time == 0) {
+        findLastNode(rootNode).addChild(new GameTreeNode(initialBoard, firstPlayer));
+    } else {
+        // Lấy node hiện tại
+        let currentNode = findLastNode(rootNode.children[gameNumber]);
+        currentNode.addChild(new GameTreeNode(initialBoard, currentNode.player = currentNode.children[0].player === 'X' ? 'O' : 'X'));
+    }
+
     // Kiểm tra ô còn trống không
     if (!cell.textContent) {
 
-        // Lấy node hiện tại
-        let currentNode = findLastNode(rootNode.children[gameNumber]);
+
 
         // Đánh dấu ô
         cell.textContent = currentNode.player;
