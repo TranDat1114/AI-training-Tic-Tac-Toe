@@ -1,4 +1,6 @@
+
 // Giai đoạn chuẩn bị
+
 class GameTreeNode {
     constructor(board, player) {
         this.board = board; // Trạng thái của bàn cờ
@@ -11,6 +13,40 @@ class GameTreeNode {
     }
 }
 
+function findLastNode(node) {
+    if (node.children.length === 0) {
+        return node; // Đây là node cuối cùng
+    }
+
+    // Nếu có node con, tiếp tục xuống đến node con đầu tiên
+    return findLastNode(node.children[0]);
+}
+
+// Chuẩn bị biến trò chơi
+
+// lấy bàn cờ từ web
+const board = document.getElementById('board');
+const boardSize = 10;
+let gameNumber = 0;
+let emptyCellsCount = boardSize * boardSize;
+// Người chơi hiện tại
+const firstPlayer = 'X';
+
+// Tạo nút gốc cho cây trò chơi
+const initialBoard = [
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", ""],
+];
+
+const rootNode = new GameTreeNode(initialBoard, firstPlayer);
 // Tạo bàn cờ
 function createBoard() {
     for (let i = 0; i < boardSize; i++) {
@@ -137,13 +173,39 @@ function checkDiagonal(board, player, row, col, targetLength) {
     );
 }
 
+// Hiển thị thông báo hoaf hoặc thắng
+const restartOrSee = (winner) => {
+    let choice = "";
+    // Nếu hòa thì hiện ra 2 lựa chọn restart hoặc xem cây
+    if (winner) {
+        choice = prompt(`Player wins! Do you want to restart the game or see the game tree? Enter "restart" or "see".`);
+    } else {
+        choice = prompt(`It's a draw! Do you want to restart the game or see the game tree? Enter "restart" or "see".`);
+    }
+    if (choice === "restart") {
+        resetBoard();
+        createBoard();
+    } else if (choice === "see") {
+        console.log(rootNode)
+    } else {
+        alert("Invalid choice. Please enter either 'restart' or 'see'.");
+        restartOrSee();
+    }
+}
+
+
 // Lamf mới bàn cờ
 function resetBoard() {
     board.innerHTML = '';
-    currentNode.addChild(new GameTreeNode(initialBoard, firstPlayer));
+    gameNumber += 1;
+    rootNode.addChild(new GameTreeNode(initialBoard, firstPlayer));
 }
 
 // Tạo nước đi
+/**
+ * Handles the logic for making a move in the game.
+ * @param {Event} event - The event object for the click event on a game cell.
+ */
 function makeMove(event) {
     const cell = event.target;
     const row = cell.dataset.row;
@@ -151,6 +213,10 @@ function makeMove(event) {
 
     // Kiểm tra ô còn trống không
     if (!cell.textContent) {
+
+        // Lấy node hiện tại
+        let currentNode = findLastNode(rootNode.children[gameNumber]);
+
         // Đánh dấu ô
         cell.textContent = currentNode.player;
 
@@ -160,55 +226,29 @@ function makeMove(event) {
 
         // Tạo nút con cho nút hiện tại
         currentNode.addChild(new GameTreeNode(newBoard, currentNode.player));
-        console.log(newBoard)
-
-        // Chuyển node hiện tại thành nút con vừa tạo
-        currentNode = currentNode.children[0];
 
         // Kiểm tra điều kiện thắng
-        const winner = checkWin(currentNode.board, currentNode.player, Number(row), Number(col));
-        console.log(winner)
+        const winner = checkWin(currentNode.children[0].board, currentNode.children[0].player, Number(row), Number(col));
+
+        // Giảm số ô còn trống
+        emptyCellsCount--;
 
         // Trả về người chơi chiến thắng và làm mới trò chơi
         if (winner) {
-            alert(`Player ${currentNode.player} wins!`);
-            resetBoard();
-            createBoard();
+            restartOrSee(winner);
+        } else if (emptyCellsCount === 0) {
+            restartOrSee(winner);
         }
         // Chuyển lượt chơi
-        currentNode.player = currentNode.player === 'X' ? 'O' : 'X';
+        currentNode.children[0].player = currentNode.children[0].player === 'X' ? 'O' : 'X';
     }
 }
 
-// Chuẩn bị biến trò chơi
-
-// lấy bàn cờ từ web
-const board = document.getElementById('board');
-const boardSize = 10;
-// Người chơi hiện tại
-const firstPlayer = 'X';
-
-// Tạo nút gốc cho cây trò chơi
-const initialBoard = [
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
-];
-
-const rootNode = new GameTreeNode(initialBoard, currentPlayer);
-let currentNode = rootNode;
 
 
 // Bắt đầu game ở đây
 createBoard();
-
+rootNode.addChild(new GameTreeNode(initialBoard, firstPlayer));
 // Phần này để làm ai cho trò chơi -- tương lai
 // Tạo trò chơi bằng cách thêm các nút con cho nút gốc
 // generateChildNodes(rootNode); 
