@@ -43,7 +43,7 @@ const initialBoard = [
     ["", "", "", "", "", "", "", "", "", ""],
     ["", "", "", "", "", "", "", "", "", ""],
     ["", "", "", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "X", "", "", "", ""],
 ];
 
 const rootNode = new GameTreeNode(initialBoard, firstPlayer);
@@ -244,11 +244,33 @@ function makeMove(event) {
     }
 }
 
+function renderGameBoard(board) {
+    const gameBoard = document.getElementById("board");
+
+    // Xóa nội dung bàn cờ hiện tại
+    gameBoard.innerHTML = "";
+
+    // Duyệt qua mảng trạng thái bàn cờ và tạo ô cho từng ô trạng thái
+    for (let row = 0; row < 10; row++) {
+        for (let col = 0; col < 10; col++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.textContent = board[row][col]; // Sử dụng trạng thái từ lastNode.board
+            gameBoard.appendChild(cell);
+        }
+    }
+}
+
+// Gọi hàm để hiển thị bàn cờ từ lastNode.board
+
 
 
 // Bắt đầu game ở đây
 createBoard();
 rootNode.addChild(new GameTreeNode(initialBoard, firstPlayer));
+
+// Hiển thị bàn cờ theo
+// renderGameBoard(findLastNode(rootNode.children[gameNumber]).board);
 // Phần này để làm ai cho trò chơi -- tương lai
 // Tạo trò chơi bằng cách thêm các nút con cho nút gốc
 // generateChildNodes(rootNode); 
