@@ -173,6 +173,7 @@ function checkDiagonal(board, player, row, col, targetLength) {
     );
 }
 
+const notificationDiv = document.getElementById("notification");
 // Hiển thị thông báo hoaf hoặc thắng
 const restartOrSee = (winner) => {
     let choice = "";
@@ -186,6 +187,7 @@ const restartOrSee = (winner) => {
         resetBoard();
         createBoard();
     } else if (choice === "see") {
+        notificationDiv.innerHTML = "See the console for the game tree.";
         console.log(rootNode)
     } else {
         alert("Invalid choice. Please enter either 'restart' or 'see'.");
